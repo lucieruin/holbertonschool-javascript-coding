@@ -11,7 +11,7 @@ request(apiUrl, (error, response, body) => {
     console.error(`Error: ${error}`);
   } else {
     const films = JSON.parse(body).results;
-    const filmsWithWedge = films.filter(film => film.characters.includes(`https://swapi.dev/api/people/${characterId}/`));
-    console.log(filmsWithWedge.length)
+    const filmsWithWedge = films.filter(film => film.characters.some(`https://swapi.dev/api/people/${characterId}/`));
+    console.log(filmsWithWedge.length);
   }
 });
