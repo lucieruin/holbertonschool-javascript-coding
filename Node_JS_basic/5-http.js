@@ -1,36 +1,37 @@
 const http = require('http');
-const url = require('url');
 const countStudents = require('./3-read_file_async');
 
-const DATABASE = process.argv[2];
+const database = process.argv[2];
 
-const app = http.createServer((req, res) => {
-  const parsedUrl = url.parse(req.url, true);
+const app = http.createServer((request, response) => {
+  response.writeHead(200, { 'Content-Type': 'text/plain' });
+  if (request.url === '/') {
+    response.write('Hello Holberton School!');
+    response.end();
+  }
 
-  if (parsedUrl.pathname === '/') {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('Hello Holberton School!');
-  } else if (parsedUrl.pathname === '/students') {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.write('This is the list of our students\n');
-
-    countStudents(DATABASE)
-      .then(() => {
-        res.end();
+  if (request.url === '/students') {
+    response.write('This is the list of our students\n');
+    countStudents(database)
+      .then((result) => {
+        response.write(`${result.totalNumber}\n`);
+        response.write(`${result.CS}\n`);
+        response.write(`${result.SWE}`);
+        response.end();
       })
       .catch((error) => {
-        res.write(error.message);
-        res.end();
+        console.error('Error processing students data:', error);
+        response.write('Cannot load the database');
+        response.end();
       });
-  } else {
-    res.writeHead(404, { 'Content-Type': 'text/plain' });
-    res.end('Not Found');
   }
 });
 
-const PORT = 1245;
-app.listen(PORT, () => {
-  console.log(`Server is listening on port ${PORT}`);
-});
-
+const port = 1245;
 module.exports = app;
+
+if (require.main === module) {
+  app.listen(port, () => {
+    console.log(`Server is running : http://localhost:${port}`);
+  });
+}
