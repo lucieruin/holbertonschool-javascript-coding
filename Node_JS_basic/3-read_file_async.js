@@ -2,30 +2,58 @@ const fs = require('fs');
 
 function countStudents(path) {
   return new Promise((resolve, reject) => {
-    fs.readFile(path, 'utf-8', (err, data) => {
-      if (err) {
+    fs.readFile(path, 'utf-8', (error, data) => {
+      if (error) {
         reject(new Error('Cannot load the database'));
-      } else {
-        const rows = data.split('\n').filter(Boolean);
-        const students = rows.slice(1).map((row) => {
-          const [firstName, lastName, age, field] = row.split(',');
+        return;
+      }
+
+      const students = data
+        .split('\n')
+        .filter(Boolean)
+        .slice(1)
+        .map((line) => {
+          const [firstname, lastname, age, field] = line.split(',');
           return {
-            firstName,
-            lastName,
+            firstname,
+            lastname,
             age,
             field,
           };
         });
 
-        const csStudents = students.filter((student) => student.field === 'CS');
-        const sweStudents = students.filter((student) => student.field === 'SWE');
+      const studentsByField = {
+        CS: [],
+        SWE: [],
+      };
 
-        console.log(`Number of students: ${students.length}`);
-        console.log(`Number of students in CS: ${csStudents.length}. List: ${csStudents.map((student) => student.firstName).join(', ')}`);
-        console.log(`Number of students in SWE: ${sweStudents.length}. List: ${sweStudents.map((student) => student.firstName).join(', ')}`);
+      students.forEach((student) => {
+        if (studentsByField[student.field]) {
+          studentsByField[student.field].push(student.firstname);
+        }
+      });
 
-        resolve();
-      }
+      const totalStudents = students.length;
+
+      console.log(`Number of students: ${totalStudents}`);
+
+      const csStudents = studentsByField.CS;
+      const sweStudents = studentsByField.SWE;
+
+      console.log(`Number of students in CS: ${csStudents.length || 0}. List: ${csStudents.join(', ')}`);
+      console.log(`Number of students in SWE: ${sweStudents.length || 0}. List: ${sweStudents.join(', ')}`);
+
+      const result = {
+        totalNumber: `Number of students: ${totalStudents}`,
+        CS: `Number of students in CS: ${
+          csStudents.length || 0
+        }. List: ${csStudents.join(', ')}`,
+        SWE: `Number of students in SWE: ${
+          sweStudents.length || 0
+        }. List: ${sweStudents.join(', ')}`,
+      };
+
+      resolve(result);
     });
   });
 }
