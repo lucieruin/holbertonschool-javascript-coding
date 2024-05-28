@@ -2,37 +2,37 @@ const readDatabase = require('../utils');
 
 class StudentsController {
   static async getAllStudents(request, response) {
-    try {
-      const students = await readDatabase('/path/to/database.csv');
-      let output = 'This is the list of our students\n';
+    readDatabase(process.argv[2] || './database.csv')
+      .then((studentsData) => {
+        const csStudents = studentsData.CS.join(', ');
+        const sweStudents = studentsData.SWE.join(', ');
 
-      const fields = Object.keys(students).sort((a, b) => a
-        .toLowerCase().localeCompare(b.toLowerCase()));
-      for (const field of fields) {
-        const firstNames = students[field];
-        output += `Number of students in ${field}: ${firstNames.length}. List: ${firstNames.join(', ')}\n`;
-      }
+        const responseText = 'This is the list of our students\n'
+          + `Number of students in CS: ${studentsData.CS.length}. List: ${csStudents}\n`
+          + `Number of students in SWE: ${studentsData.SWE.length}. List: ${sweStudents}`;
 
-      response.status(200).send(output.trim());
-    } catch (error) {
-      response.status(500).send('Cannot load the database');
-    }
+        response.status(200).send(responseText);
+      })
+      .catch((error) => {
+        console.error('Error:', error);
+        response.status(500).send('Cannot load the database');
+      });
   }
 
   static async getAllStudentsByMajor(request, response) {
-    const { major } = request.params;
-
-    if (major !== 'CS' && major !== 'SWE') {
-      response.status(500).send('Major parameter must be CS or SWE');
-      return;
-    }
-
     try {
-      const students = await readDatabase('/path/to/database.csv');
-      const firstNames = students[major] || [];
+      const { major } = request.params;
 
-      response.status(200).send(`List: ${firstNames.join(', ')}`);
+      if (major !== 'CS' && major !== 'SWE') {
+        response.status(500).send('Major parameter must be CS or SWE');
+        return;
+      }
+
+      const studentsData = await readDatabase(process.argv[2] || './database.csv');
+      const students = studentsData[major] || [];
+      response.status(200).send(`List: ${students.join(', ')}`);
     } catch (error) {
+      console.error('Error:', error);
       response.status(500).send('Cannot load the database');
     }
   }
